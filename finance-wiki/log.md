@@ -56,3 +56,12 @@
 **新增**：concepts/[[no-arbitrage]]、[[probability-expected-value]]、[[normal-distribution]]、[[discounting-continuous-compounding]]、[[calculus-basics]]  
 **例子**：皆取自已 ingest 的講義並以 Python 重算，例如一期例題中買權定價為 0.70 時可套利 0.069 元、為 0.60 時可套利 0.034 元；$4.5e^{-0.03}=4.367$；$N(1)=0.8413$。  
 **規則修改**：CLAUDE.md 新增「基礎知識頁」一節，要求頁尾註明來源說明。
+
+---
+
+## 2026-11-23：補上簡報用到的基礎知識
+
+**原因**：簡報完成後逐一核對基礎名詞，發現「自然對數」「報酬率」「測度」在簡報中使用，Wiki 卻沒有白話定義。逐頁檢查未能發現，因術語順序檢查只涵蓋每頁標註的名詞。  
+**新增**：concepts/[[logarithm-exponential]]、[[return-rate]]  
+**更新**：[[probability-expected-value]] 補上「測度」；[[geometric-brownian-motion]]、[[black-scholes-model]]、[[measure-change-girsanov]] 補上關聯；index.md。  
+**例子**：$\ln(22/20)=0.0953$；$S=K=100$ 時 $\ln(S/K)=0$、$d_1=0.35$；股價由 20 元漲至 22 元，報酬率為 10%。

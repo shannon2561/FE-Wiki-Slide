@@ -1,4 +1,4 @@
-# Probability & Expected Value（機率、期望值、變異數與標準差）
+# Probability & Expected Value（機率、期望值、變異數、標準差與測度）
 
 ## 定義
 
@@ -6,6 +6,7 @@
 - **隨機變數**：結果事先無法確定、但每種結果都有對應機率的量，例如 3 個月後的股價。
 - **期望值**：以機率為權重，對所有可能結果加權平均，代表重複很多次時的平均結果，記為 $E[X]$。例如買權到期值為 1（機率 q）或 0（機率 1 − q），期望值為 $q\times1+(1-q)\times0=q$。
 - **變異數**：各結果與期望值差距的平方，再以機率加權平均，衡量結果分散的程度，記為 $\mathrm{Var}(X)$。
+- **測度**：一套「指定給所有可能結果的機率」。同樣是股價漲跌，可以用真實的機率衡量（真實測度 $P$），也可以用定價用的風險中立機率衡量（風險中立測度 $Q$）；轉換測度不改變哪些結果可能發生，只改變各結果的機率（見 [[measure-change-girsanov]]）。
 - **標準差**：變異數開根號，單位與原本的量相同，記為 $\sigma$。金融上所說的波動度 (volatility) 即為報酬率的標準差，例如年化波動度 20%，代表一年報酬率的標準差為 20%。
 
 ## 例子
@@ -22,7 +23,7 @@
 
 ## 關聯概念
 
-[[normal-distribution]]、[[discounting-continuous-compounding]]、[[risk-neutral-valuation]]
+[[normal-distribution]]、[[discounting-continuous-compounding]]、[[risk-neutral-valuation]]、[[return-rate]]、[[measure-change-girsanov]]
 
 ## 來源說明
 

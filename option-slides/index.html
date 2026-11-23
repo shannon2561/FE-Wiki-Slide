@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>選擇權怎麼定價？從二元樹到 Black-Scholes 公式</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<style>
+:root{--ink:#1F2A27;--muted:#66706C;--brand:#2F5D50;--accent:#C8742B;--paper:#FBFAF7;--line:#E3E0D8;--tint:#EEF3F0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#E9E6DF;color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif}
+.deck{height:100%;display:flex;align-items:center;justify-content:center;padding:16px 16px 72px}
+.slide{display:none;width:min(1100px,100%);height:min(680px,calc(100vh - 100px));background:var(--paper);border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.08);padding:40px 56px 18px;flex-direction:column}
+.slide.active{display:flex}
+.content{flex:1;overflow:auto;font-size:17.5px;line-height:1.66}
+.content h2{font-family:"Noto Serif TC",serif;font-size:30px;color:var(--brand);margin:0 0 10px}
+.lead{font-size:20px;font-weight:500;background:var(--tint);border-left:4px solid var(--brand);padding:10px 16px;border-radius:0 8px 8px 0;margin:0 0 14px}
+.content ul,.content ol{margin:6px 0 10px;padding-left:1.4em}.content li{margin:4px 0}
+.content b{color:var(--brand)}
+.md{margin:4px 0;text-align:center;font-size:20px;overflow-x:auto}
+dl.sym{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:2px 14px;font-size:14.5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:10px 0}
+dl.sym dt{text-align:right;color:var(--brand)}dl.sym dd{margin:0;color:var(--muted)}
+table{border-collapse:collapse;margin:8px 0;font-size:17px}th,td{border:1px solid var(--line);padding:6px 14px;text-align:center}th{background:var(--tint)}
+.fig{margin:4px auto;max-width:420px}.fig svg{width:100%;height:auto;font-family:"Noto Sans TC",sans-serif}
+.split{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:center}.split .fig{max-width:100%}
+.more{font-size:15px}.more a,.content a{color:var(--accent)}
+footer.src{border-top:1px solid var(--line);padding-top:8px;font-size:13px;color:var(--muted)}
+footer.src a{color:var(--muted)}
+.cover .content{display:flex;flex-direction:column;justify-content:center}
+.cover-title{font-family:"Noto Serif TC",serif;font-size:56px;color:var(--brand);margin:0}
+.cover-sub{font-size:26px;color:var(--accent);margin:6px 0 30px}
+.hint{color:var(--muted);font-size:15px}
+.appendix{background:#FFFDF8}.appendix h2{color:#6B4A1E}
+nav.bar{position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;justify-content:center;gap:14px;background:rgba(251,250,247,.95);border-top:1px solid var(--line);font-size:15px}
+nav.bar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font:inherit}
+nav.bar button:disabled{opacity:.4;cursor:default}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--brand);transition:width .2s}
+@media (max-width:700px){dl.sym{grid-template-columns:auto 1fr}.split{grid-template-columns:1fr}.slide{padding:22px 20px 12px;height:calc(100vh - 90px)}.content{font-size:16px}.content h2{font-size:23px}.cover-title{font-size:36px}.lead{font-size:17px}}
+@media print{nav.bar,.progress{display:none}.deck{display:block;padding:0}.slide{display:flex!important;page-break-after:always;box-shadow:none;height:auto}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="deck" id="deck">
+<section class="slide cover" id="s1" data-id="1">
+<div class="content">
+<h1 class="cover-title">選擇權怎麼定價？</h1>
+<p class="cover-sub">從二元樹到 Black-Scholes 公式</p>
+<p class="lead">此簡報寫給沒有財金、微積分與機率基礎的讀者。讀完後，可以說明選擇權的價格為何不需要猜測股價漲跌，以及 Black-Scholes 公式的兩項分別在計算什麼。</p>
+<p class="hint">以鍵盤 ← → 或下方按鈕換頁；推導過程放在附錄，正文以連結進入。</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/index.md" target="_blank" rel="noopener">Wiki 總索引</a></footer>
+</section>
+<section class="slide" id="s2" data-id="2">
+<div class="content">
+<h2>選擇權是一種「權利」</h2>
+<p class="lead">選擇權是一張契約：買方先付一筆錢，換到未來以約定價格買進或賣出某項資產的權利，但沒有義務。</p>
+<ul>
+<li><b>標的</b>：契約約定買賣的資產，例如一支股票。</li>
+<li><b>權利金</b>：買方為取得權利所支付的價格，也就是此簡報要計算的「選擇權價格」。</li>
+<li><b>履約價</b> <span class="m">K</span>：約定的買賣價格。</li>
+<li><b>到期日</b>：可以行使權利的最後期限，距今的時間以 <span class="m">T</span>（年）表示。</li>
+<li><b>買權</b> (call) 是可以「買」的權利；<b>賣權</b> (put) 是可以「賣」的權利。</li>
+<li><b>歐式</b>選擇權只能在到期日行使，<b>美式</b>選擇權在到期前任一天都可以行使。此簡報只討論歐式買權。</li>
+</ul>
+<dl class="sym"><dt><span class="m">K</span></dt><dd>履約價</dd><dt><span class="m">T</span></dt><dd>距到期日的時間，以年為單位</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/option-basics.md" target="_blank" rel="noopener">Option Basics</a></footer>
+</section>
+<section class="slide" id="s3" data-id="3">
+<div class="content">
+<h2>到期時賺多少</h2>
+<p class="lead">到期股價高於履約價才值得行使權利，因此買進買權最多只會損失權利金。</p>
+<p>例題：買進 100 股歐式買權，履約價 100 元，權利金每股 5 元，共付 500 元。</p>
+<div class="split"><div>
+<ul>
+<li>到期股價 115 元：以 100 元買進、在市場以 115 元賣出，每股獲利 15 元，扣除權利金後淨賺 1,000 元。</li>
+<li>到期股價低於 100 元：不行使權利，損失權利金 500 元。</li>
+</ul>
+<div class="md">\text{買權到期價值}=\max(S_T-K,\;0)</div>
+</div><figure class="fig"><svg viewBox="0 0 420 210" role="img" aria-label="買進買權的到期淨損益圖">
+<line x1="40" y1="150" x2="405" y2="150" stroke="#8A948F"/><line x1="60" y1="15" x2="60" y2="185" stroke="#8A948F"/>
+<text x="404" y="143" text-anchor="end" font-size="13" fill="#8A948F">到期股價（元）</text><text x="66" y="24" font-size="13" fill="#8A948F">每股淨損益（元）</text>
+<polyline points="60,165 230,165 390,45" fill="none" stroke="#2F5D50" stroke-width="3"/>
+<line x1="230" y1="150" x2="230" y2="170" stroke="#8A948F" stroke-dasharray="3"/><text x="230" y="186" text-anchor="middle" font-size="13">100</text>
+<text x="350" y="186" text-anchor="middle" font-size="13">115</text><line x1="350" y1="150" x2="350" y2="75" stroke="#C8742B" stroke-dasharray="3"/>
+<circle cx="350" cy="75" r="4" fill="#C8742B"/><text x="342" y="66" text-anchor="end" font-size="13" fill="#C8742B">股價 115：100 股淨賺 1,000</text>
+<text x="66" y="182" font-size="13" fill="#2F5D50">最多損失權利金 5</text></svg></figure></div>
+<dl class="sym"><dt><span class="m">S_T</span></dt><dd>到期日的股價</dd><dt><span class="m">K</span></dt><dd>履約價</dd><dt><span class="m">\max(a,b)</span></dt><dd>取兩者中較大的數</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/option-basics.md" target="_blank" rel="noopener">Option Basics</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a></footer>
+</section>
+<section class="slide" id="s4" data-id="4">
+<div class="content">
+<h2>難題：今天該付多少錢？</h2>
+<p class="lead">選擇權值多少取決於未來的股價，而未來股價無法確定，因此價格無法直接寫出來。</p>
+<p>直覺的做法是先猜股價上漲與下跌的機率，再計算平均可以拿到多少錢，也就是期望值（第 5 頁說明機率與期望值）。問題在於每個人猜的機率不同：看好的人估得高，看壞的人估得低，同一張選擇權就會出現不同的價格。</p>
+<p>第 6 至 8 頁將說明，選擇權的價格其實可以不必猜測漲跌機率就決定下來。</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/risk-neutral-valuation.md" target="_blank" rel="noopener">Risk-Neutral Valuation</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/probability-expected-value.md" target="_blank" rel="noopener">Probability & Expected Value</a></footer>
+</section>
+<section class="slide" id="s5" data-id="5">
+<div class="content">
+<h2>三個基本工具</h2>
+<p class="lead">選擇權定價會用到三個工具：期望值、折現與無套利。</p>
+<ol>
+<li><b>機率與期望值</b>：機率是某件事發生的可能性，介於 0 到 1；期望值是依機率加權的平均結果。例如到期值為 1 元的機率是 0.6523、為 0 元的機率是 0.3477，期望值即為 0.6523 元。</li>
+<li><b>折現</b>：把未來的錢換算成今天的價值。今天的錢可以生利息，所以未來的 1 元價值低於今天的 1 元。以<b>無風險利率</b>（例如存款利率）<span class="m">r</span> 計算，<span class="m">T</span> 年後的 1 元，現值為 <span class="m">e^{-rT}</span> 元。例如 3 個月後的 4.5 元，在年利率 12% 下現值為 <span class="m">4.5\times e^{-0.12\times0.25}=4.367</span> 元。</li>
+<li><b>無套利</b>：<b>套利</b>是不出資金、沒有風險卻一定賺錢的交易。無套利原則假設市場上不存在這種機會；一旦出現，所有人都會搶著做，價格隨即被推回合理水準。</li>
+</ol>
+<dl class="sym"><dt><span class="m">e</span></dt><dd>自然常數，約 2.718，用來計算連續複利</dd><dt><span class="m">r</span></dt><dd>無風險利率，以年化表示，即換算為一年的利率；3 個月的利率為 0.12 × 0.25 = 0.03</dd><dt><span class="m">T</span></dt><dd>期間，以年為單位</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/probability-expected-value.md" target="_blank" rel="noopener">Probability & Expected Value</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/discounting-continuous-compounding.md" target="_blank" rel="noopener">Discounting & Continuous Compounding</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/no-arbitrage.md" target="_blank" rel="noopener">No-Arbitrage</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/return-rate.md" target="_blank" rel="noopener">Return Rate</a></footer>
+</section>
+<section class="slide" id="s6" data-id="6">
+<div class="content">
+<h2>最簡單的世界：一期二元樹</h2>
+<p class="lead">假設股價 3 個月後只有兩種可能，選擇權的價格就可以算出來。</p>
+<p>股價現在 20 元，3 個月後只會漲到 22 元或跌到 18 元。這種每期只分兩條路的模型稱為<b>二元樹</b>。考慮履約價 21 元的歐式買權，年利率 12%：</p>
+<ul>
+<li>漲到 22 元：行使權利，買權到期價值為 22 − 21 = 1 元。</li>
+<li>跌到 18 元：不行使，到期價值為 0 元。</li>
+</ul>
+<figure class="fig"><svg viewBox="0 0 420 170" role="img" aria-label="一期二元樹">
+<line x1="90" y1="85" x2="300" y2="35" stroke="#8A948F" stroke-width="2"/><line x1="90" y1="85" x2="300" y2="135" stroke="#8A948F" stroke-width="2"/>
+<circle cx="90" cy="85" r="30" fill="#2F5D50"/><text x="90" y="81" text-anchor="middle" fill="#fff" font-size="13">股價 20</text><text x="90" y="98" text-anchor="middle" fill="#fff" font-size="12">買權 ?</text>
+<circle cx="300" cy="35" r="30" fill="#fff" stroke="#2F5D50" stroke-width="2"/><text x="300" y="31" text-anchor="middle" font-size="13">22</text><text x="300" y="48" text-anchor="middle" font-size="12" fill="#C8742B">買權 1</text>
+<circle cx="300" cy="135" r="30" fill="#fff" stroke="#2F5D50" stroke-width="2"/><text x="300" y="131" text-anchor="middle" font-size="13">18</text><text x="300" y="148" text-anchor="middle" font-size="12" fill="#C8742B">買權 0</text>
+<text x="200" y="165" text-anchor="middle" font-size="12" fill="#8A948F">今天 → 3 個月後</text></svg></figure>
+<p>問題：這張買權今天值多少錢？</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/binomial-option-pricing.md" target="_blank" rel="noopener">Binomial Option Pricing</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a></footer>
+</section>
+<section class="slide" id="s7" data-id="7">
+<div class="content">
+<h2>關鍵一步：組一個不怕漲跌的組合</h2>
+<p class="lead">賣出 1 單位買權、同時買進 0.25 股股票，不論股價漲或跌，這個組合到期都值 4.5 元。</p>
+<table><tr><th>到期股價</th><th>組合價值 = 0.25 股的價值 − 賣出買權須支付的金額</th></tr>
+<tr><td>22 元</td><td>22 × 0.25 − 1 = 4.5 元</td></tr>
+<tr><td>18 元</td><td>18 × 0.25 − 0 = 4.5 元</td></tr></table>
+<p>到期價值確定，沒有風險，稱為<b>無風險組合</b>。依無套利原則，無風險組合只能賺無風險利率，故現值為 4.367 元。今天建立組合的成本，為買 0.25 股的 20 × 0.25 = 5 元，扣掉賣出買權收到的 <span class="m">C</span>，令 <span class="m">5-C=4.367</span>，得買權價格 <span class="m">C=0.633</span> 元。</p>
+<p>買進的股數 0.25 稱為 <b>Delta</b>（<span class="m">\Delta</span>），選擇方式是讓漲跌兩種情況的組合價值相同。若市場上買權賣 0.70 元或 0.60 元，都可以套利。</p>
+<dl class="sym"><dt><span class="m">C</span></dt><dd>買權今天的價格</dd><dt><span class="m">\Delta</span></dt><dd>避險所需的股數</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/binomial-option-pricing.md" target="_blank" rel="noopener">Binomial Option Pricing</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/delta-hedging-replication.md" target="_blank" rel="noopener">Delta Hedging & Replication</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/no-arbitrage.md" target="_blank" rel="noopener">No-Arbitrage</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a></footer>
+</section>
+<section class="slide" id="s8" data-id="8">
+<div class="content">
+<h2>為什麼不用猜機率</h2>
+<p class="lead">上一頁算出 0.633 元的過程中，完全沒有用到股價真實的漲跌機率。</p>
+<p>同一個答案也可以寫成「機率加權平均再折現」：</p>
+<div class="md">C=e^{-rT}\,[\,q\times1+(1-q)\times0\,],\qquad q=\frac{e^{rT}-d}{u-d}=0.6523</div>
+<p>這裡的 <span class="m">q</span> 稱為<b>風險中立機率</b>：它是讓股票的平均<b>報酬率</b>剛好等於無風險利率的機率，與股價真實上漲的機率無關。報酬率是股價漲跌的比例，例如由 20 元漲到 22 元，報酬率為 (22 − 20) ÷ 20 = 10%。以 <span class="m">q</span> 計算期望值 0.6523 元，折現後同樣是 0.633 元。</p>
+<p>結論：選擇權價格由「能否用股票與借貸組出相同的現金流」決定，與投資人看漲或看跌無關。股價<b>真實機率</b> <span class="m">p</span> 不影響價格。</p>
+<dl class="sym"><dt><span class="m">u</span></dt><dd>上漲倍數，22 ÷ 20 = 1.1</dd><dt><span class="m">d</span></dt><dd>下跌倍數，18 ÷ 20 = 0.9</dd><dt><span class="m">q</span></dt><dd>風險中立機率</dd><dt><span class="m">p</span></dt><dd>股價真實上漲的機率</dd><dt><span class="m">C,\,r,\,T</span></dt><dd>買權價格、無風險利率、期間（見第 5、7 頁）</dd><dt><span class="m">e</span></dt><dd>自然常數，<span class="m">e^{-rT}</span> 為折現（第 5 頁）</dd></dl>
+<p class="more"><a href="#A">推導：附錄 A</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/risk-neutral-valuation.md" target="_blank" rel="noopener">Risk-Neutral Valuation</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/binomial-option-pricing.md" target="_blank" rel="noopener">Binomial Option Pricing</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/probability-expected-value.md" target="_blank" rel="noopener">Probability & Expected Value</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/return-rate.md" target="_blank" rel="noopener">Return Rate</a></footer>
+</section>
+<section class="slide" id="s9" data-id="9">
+<div class="content">
+<h2>換個角度：複製</h2>
+<p class="lead">用股票加上借錢，可以做出與買權完全相同的到期現金流，所以兩者價格必須相同。</p>
+<p>買進 0.25 股需要 5 元，其中 4.367 元用借的，自己只出 0.633 元。3 個月後還款本息共 4.5 元：</p>
+<ul>
+<li>股價 22 元：持股價值 22 × 0.25，扣掉還款 4.5 元後剩 1 元。</li>
+<li>股價 18 元：持股價值 18 × 0.25 = 4.5 元，扣掉還款 4.5 元後剩 0 元。</li>
+</ul>
+<p>與買權的到期價值（1 元或 0 元）完全相同，這個組合稱為<b>複製</b>組合，成本 0.633 元即為買權價格。選擇權的發行商也是靠持有複製組合來避險。</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/delta-hedging-replication.md" target="_blank" rel="noopener">Delta Hedging & Replication</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a></footer>
+</section>
+<section class="slide" id="s10" data-id="10">
+<div class="content">
+<h2>從一期到無限多期</h2>
+<p class="lead">把時間切成更多段，每段都用同一個方法往回算，結果會越來越接近 Black-Scholes 公式。</p>
+<p>二期例題：到期 6 個月，每 3 個月股價變為原本的 1.1 倍或 0.9 倍，履約價 21 元。從到期日開始往回，每個節點都用第 8 頁的公式計算，3 個月後股價為 22 元的節點，買權價值為 2.0257 元；今天起點的價值為 1.2823 元。</p>
+<figure class="fig"><svg viewBox="0 0 460 215" role="img" aria-label="二期二元樹">
+<g stroke="#8A948F" stroke-width="2"><line x1="70" y1="95" x2="220" y2="50"/><line x1="70" y1="95" x2="220" y2="140"/><line x1="220" y1="50" x2="380" y2="20"/><line x1="220" y1="50" x2="380" y2="95"/><line x1="220" y1="140" x2="380" y2="95"/><line x1="220" y1="140" x2="380" y2="170"/></g>
+<g font-size="14" text-anchor="middle">
+<rect x="28" y="70" width="84" height="50" rx="8" fill="#2F5D50"/><text x="70" y="91" fill="#fff">20</text><text x="70" y="110" fill="#fff">1.2823</text>
+<rect x="178" y="25" width="84" height="50" rx="8" fill="#fff" stroke="#2F5D50"/><text x="220" y="46">22</text><text x="220" y="65" fill="#C8742B">2.0257</text>
+<rect x="178" y="115" width="84" height="50" rx="8" fill="#fff" stroke="#2F5D50"/><text x="220" y="136">18</text><text x="220" y="155" fill="#C8742B">0</text>
+<rect x="342" y="0" width="76" height="42" rx="8" fill="#fff" stroke="#8A948F"/><text x="380" y="17">24.2</text><text x="380" y="35" fill="#C8742B">3.2</text>
+<rect x="342" y="74" width="76" height="42" rx="8" fill="#fff" stroke="#8A948F"/><text x="380" y="91">19.8</text><text x="380" y="109" fill="#C8742B">0</text>
+<rect x="342" y="149" width="76" height="42" rx="8" fill="#fff" stroke="#8A948F"/><text x="380" y="166">16.2</text><text x="380" y="184" fill="#C8742B">0</text></g>
+<text x="230" y="210" text-anchor="middle" font-size="13" fill="#8A948F">每格上方為股價，下方（橘色）為買權價值；今天 → 3 個月 → 6 個月</text></svg></figure>
+<p>各節點需要的 Delta 也不同（0.5064、0.7273、0），因此避險必須隨股價變動持續調整。期數切得越細，二元樹的答案就越接近第 12 頁的 Black-Scholes 公式。</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/binomial-option-pricing.md" target="_blank" rel="noopener">Binomial Option Pricing</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/delta-hedging-replication.md" target="_blank" rel="noopener">Delta Hedging & Replication</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a></footer>
+</section>
+<section class="slide" id="s11" data-id="11">
+<div class="content">
+<h2>股價在連續時間怎麼動</h2>
+<p class="lead">Black-Scholes 模型（第 12 頁）假設，股價的報酬率由「固定成長」加上「隨機衝擊」組成。</p>
+<div class="md">\frac{dS}{S}=\mu\,dt+\sigma\,dz</div>
+<ul>
+<li>固定成長：<span class="m">\mu</span> 為股票平均每年的<b>期望報酬率</b>。</li>
+<li>隨機衝擊：<span class="m">dz</span> 來自<b>布朗運動</b>，代表無法預測的隨機變動，服從<b>常態分配</b>。常態分配是左右對稱的鐘形分配，落在平均數 ±1 個<b>標準差</b>內的機率約 68%。</li>
+<li><span class="m">\sigma</span> 為<b>波動度</b>，即報酬率的標準差，衡量股價跳動的幅度。年化波動度 20%，代表一年報酬率的標準差為 20%。</li>
+</ul>
+<p>隨機變動的是報酬率而非股價本身，因此股價不會變成負數。</p>
+<dl class="sym"><dt><span class="m">S</span></dt><dd>股價</dd><dt><span class="m">dS,\ dt</span></dt><dd>極短時間 <span class="m">dt</span> 內股價的變動量 <span class="m">dS</span></dd><dt><span class="m">dz</span></dt><dd>同一段時間內的隨機變動</dd><dt><span class="m">\mu,\ \sigma</span></dt><dd>期望報酬率、波動度</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/geometric-brownian-motion.md" target="_blank" rel="noopener">Geometric Brownian Motion</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/brownian-motion.md" target="_blank" rel="noopener">Brownian Motion</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/normal-distribution.md" target="_blank" rel="noopener">Normal Distribution</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/probability-expected-value.md" target="_blank" rel="noopener">Probability & Expected Value</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/calculus-basics.md" target="_blank" rel="noopener">Calculus Basics</a></footer>
+</section>
+<section class="slide" id="s12" data-id="12">
+<div class="content">
+<h2>Black-Scholes 公式</h2>
+<p class="lead">在第 11 頁的假設下，歐式買權的價格可以用一條公式直接算出。</p>
+<div class="md">C=S\,N(d_1)-K e^{-rT}N(d_2)</div>
+<div class="md">d_1=\frac{\ln(S/K)+(r+\frac12\sigma^2)T}{\sigma\sqrt T},\qquad d_2=d_1-\sigma\sqrt T</div>
+<dl class="sym"><dt><span class="m">C,\ S,\ K</span></dt><dd>買權價格、目前股價、履約價</dd><dt><span class="m">r,\ T,\ \sigma</span></dt><dd>無風險利率、距到期時間（年）、波動度</dd><dt><span class="m">e^{-rT}</span></dt><dd>折現（第 5 頁）</dd><dt><span class="m">N(\cdot)</span></dt><dd>標準常態分配的<b>累積機率</b>，即鐘形曲線在某個值左側的面積，介於 0 與 1</dd><dt><span class="m">\ln</span></dt><dd>自然對數，<span class="m">S=K</span> 時 <span class="m">\ln(S/K)=0</span></dd><dt><span class="m">d_1,\ d_2</span></dt><dd>代入 <span class="m">N(\cdot)</span> 的兩個數</dd><dt><span class="m">\mu</span></dt><dd>期望報酬率（第 11 頁）</dd></dl>
+<p>例題：<span class="m">S=K=100</span>、<span class="m">r=5\%</span>、<span class="m">\sigma=20\%</span>、<span class="m">T=1</span>，算得 <span class="m">N(d_1)=0.6368</span>、<span class="m">N(d_2)=0.5596</span>，買權價格 <span class="m">C=10.4506</span> 元。公式中沒有期望報酬率 <span class="m">\mu</span>，與第 8 頁「不用猜漲跌」的結論一致。</p>
+<p class="more"><a href="#B">推導：附錄 B、C、D</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/black-scholes-model.md" target="_blank" rel="noopener">Black-Scholes Model</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-03-black-scholes-formula.md" target="_blank" rel="noopener">講義 03</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/normal-distribution.md" target="_blank" rel="noopener">Normal Distribution</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-07-martingale-pricing.md" target="_blank" rel="noopener">講義 07</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/logarithm-exponential.md" target="_blank" rel="noopener">Exponential & Natural Logarithm</a></footer>
+</section>
+<section class="slide" id="s13" data-id="13">
+<div class="content">
+<h2>公式的兩項在算什麼</h2>
+<p class="lead">公式的兩項分別是「行使時拿到股票」與「行使時付出履約價」的期望現值。</p>
+<ul>
+<li>第二項 <span class="m">Ke^{-rT}N(d_2)</span>：<span class="m">N(d_2)</span> 是在風險中立機率下，到期股價高於履約價、買權被行使的機率。行使時要付 <span class="m">K</span> 元，乘上機率再折現，即為付出履約價的期望現值。</li>
+<li>第一項 <span class="m">S\,N(d_1)</span>：行使時會拿到股票，此項為拿到股票的期望現值。<span class="m">N(d_1)</span> 同樣代表行使的可能性，但行使時拿到的是會隨股價變動的股票，加權方式改以股票價值計算，因此數值比 <span class="m">N(d_2)</span> 大（數學細節見<a href="#D">附錄 D</a>）。</li>
+</ul>
+<figure class="fig"><svg viewBox="0 0 420 180" role="img" aria-label="標準常態分配與累積機率"><text x="330" y="60" font-size="12" fill="#66706C">鐘形曲線＝標準常態分配</text>
+<polygon points="35,150 35.0,149.7 40.0,149.6 45.0,149.5 50.0,149.3 55.0,149.0 60.0,148.7 65.0,148.2 70.0,147.6 75.0,146.9 80.0,145.9 85.0,144.7 90.0,143.3 95.0,141.5 100.0,139.3 105.0,136.8 110.0,133.8 115.0,130.3 120.0,126.3 125.0,121.7 130.0,116.6 135.0,111.0 140.0,105.0 145.0,98.5 150.0,91.6 155.0,84.5 160.0,77.2 165.0,70.0 170.0,62.9 175.0,56.1 180.0,49.8 185.0,44.1 190.0,39.2 195.0,35.3 200.0,32.4 205.0,30.6 210.0,30.0 215.0,30.6 217.5,150" fill="#C8742B" opacity="0.35"/>
+<polyline points="35.0,149.7 40.0,149.6 45.0,149.5 50.0,149.3 55.0,149.0 60.0,148.7 65.0,148.2 70.0,147.6 75.0,146.9 80.0,145.9 85.0,144.7 90.0,143.3 95.0,141.5 100.0,139.3 105.0,136.8 110.0,133.8 115.0,130.3 120.0,126.3 125.0,121.7 130.0,116.6 135.0,111.0 140.0,105.0 145.0,98.5 150.0,91.6 155.0,84.5 160.0,77.2 165.0,70.0 170.0,62.9 175.0,56.1 180.0,49.8 185.0,44.1 190.0,39.2 195.0,35.3 200.0,32.4 205.0,30.6 210.0,30.0 215.0,30.6 220.0,32.4 225.0,35.3 230.0,39.2 235.0,44.1 240.0,49.8 245.0,56.1 250.0,62.9 255.0,70.0 260.0,77.2 265.0,84.5 270.0,91.6 275.0,98.5 280.0,105.0 285.0,111.0 290.0,116.6 295.0,121.7 300.0,126.3 305.0,130.3 310.0,133.8 315.0,136.8 320.0,139.3 325.0,141.5 330.0,143.3 335.0,144.7 340.0,145.9 345.0,146.9 350.0,147.6 355.0,148.2 360.0,148.7 365.0,149.0 370.0,149.3 375.0,149.5 380.0,149.6 385.0,149.7" fill="none" stroke="#2F5D50" stroke-width="2.5"/><line x1="20" y1="150" x2="400" y2="150" stroke="#8A948F"/>
+<line x1="217.5" y1="150" x2="217.5" y2="20" stroke="#C8742B" stroke-dasharray="3"/><text x="224" y="18" font-size="13" fill="#C8742B">d₂ = 0.15</text>
+<text x="120" y="135" font-size="13" fill="#5a3a12">面積 = N(d₂) = 0.5596</text><text x="210" y="168" text-anchor="middle" font-size="12" fill="#8A948F">0</text></svg></figure>
+<p>驗證：以 40 萬次模擬產生到期股價，風險中立機率下到期高於履約價的比例為 0.5600，公式的 <span class="m">N(d_2)=0.5596</span>；改以股票為衡量單位時比例為 0.6368，與 <span class="m">N(d_1)</span> 相同；模擬的買權價格為 10.450 元，公式為 10.4506 元。</p>
+<dl class="sym"><dt><span class="m">S,\ K,\ r,\ T,\ N(\cdot),\ d_1,\ d_2</span></dt><dd>同第 12 頁</dd><dt><span class="m">e^{-rT}</span></dt><dd>折現（第 5 頁）</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-07-martingale-pricing.md" target="_blank" rel="noopener">講義 07</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-03-black-scholes-formula.md" target="_blank" rel="noopener">講義 03</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/measure-change-girsanov.md" target="_blank" rel="noopener">Measure Change & Girsanov Theorem</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/normal-distribution.md" target="_blank" rel="noopener">Normal Distribution</a></footer>
+</section>
+<section class="slide" id="s14" data-id="14">
+<div class="content">
+<h2>三條路，同一個答案</h2>
+<p class="lead">Black-Scholes 公式可以用三種完全不同的方法推出，結果相同。</p>
+<ol>
+<li><b>二元樹取極限</b>：把期數切到無限多（第 10 頁）。推導見<a href="#A">附錄 A</a>。</li>
+<li><b>解偏微分方程</b>：組出無風險組合後，可得一條描述選擇權價格如何隨股價與時間變化的方程式，稱為<b>偏微分方程</b>。換變數後，它與物理學中熱在金屬棒裡擴散的方程式相同，可以直接套用熱擴散的解。見<a href="#B">附錄 B</a>、<a href="#C">附錄 C</a>。</li>
+<li><b>Martingale</b>：在風險中立機率下，股票折現後的價格平均而言不漲不跌，像一場公平的賭局，這種性質稱為 Martingale；選擇權價格即為到期價值的期望值再折現。見<a href="#D">附錄 D</a>。</li>
+</ol>
+<p>三種方法的共同出發點都是無套利。</p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-03-black-scholes-formula.md" target="_blank" rel="noopener">講義 03</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/black-scholes-pde.md" target="_blank" rel="noopener">Black-Scholes PDE</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/heat-equation-method.md" target="_blank" rel="noopener">Heat Equation Method</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/martingale.md" target="_blank" rel="noopener">Martingale</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-06-bs-pde-derivation.md" target="_blank" rel="noopener">講義 06</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-07-martingale-pricing.md" target="_blank" rel="noopener">講義 07</a></footer>
+</section>
+<section class="slide" id="s15" data-id="15">
+<div class="content">
+<h2>重點整理</h2>
+<p class="lead">選擇權的價格由無套利決定，不需要猜測股價漲跌，Black-Scholes 公式即為此原則在連續時間下的結果。</p>
+<ol>
+<li>選擇權是權利而非義務，買權到期價值為 <span class="m">\max(S_T-K,0)</span>，損失最多為權利金。</li>
+<li>價格由無套利決定：用股票與借貸組出相同的現金流，成本即為價格，一期例題為 0.633 元。</li>
+<li>不需要猜漲跌機率：風險中立機率 <span class="m">q</span> 不是真實機率，只是計算工具。</li>
+<li>Black-Scholes 公式是二元樹切到無限多期的結果。</li>
+<li>公式兩項分別為拿到股票與付出履約價的期望現值，<span class="m">N(d_2)</span> 為風險中立機率下的行使機率。</li>
+</ol>
+<dl class="sym"><dt><span class="m">S_T,\ K,\ q,\ N(d_2)</span></dt><dd>到期股價、履約價、風險中立機率、行使機率（見第 3、8、12 頁）</dd></dl>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/index.md" target="_blank" rel="noopener">Wiki 總索引</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/option-basics.md" target="_blank" rel="noopener">Option Basics</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/no-arbitrage.md" target="_blank" rel="noopener">No-Arbitrage</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/risk-neutral-valuation.md" target="_blank" rel="noopener">Risk-Neutral Valuation</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/black-scholes-model.md" target="_blank" rel="noopener">Black-Scholes Model</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-07-martingale-pricing.md" target="_blank" rel="noopener">講義 07</a></footer>
+</section>
+<section class="slide appendix" id="sA" data-id="A">
+<div class="content">
+<h2>附錄 A：二元樹的一般公式</h2>
+<p class="lead">一期二元樹中，選擇權價格等於以風險中立機率計算的期望值再折現。</p>
+<ol>
+<li>股價由 <span class="m">S_0</span> 漲為 <span class="m">S_0u</span> 或跌為 <span class="m">S_0d</span>，選擇權到期價值分別為 <span class="m">f_u</span>、<span class="m">f_d</span>。</li>
+<li>買進 <span class="m">\Delta</span> 股、賣出 1 單位選擇權，令兩種情況價值相等：<span class="m">S_0u\Delta-f_u=S_0d\Delta-f_d</span>，得 <span class="m">\Delta=\frac{f_u-f_d}{S_0u-S_0d}</span>。</li>
+<li>組合無風險，現值等於到期值折現：<span class="m">S_0\Delta-f=(S_0u\Delta-f_u)e^{-rT}</span>。</li>
+<li>代入 <span class="m">\Delta</span> 整理得 <span class="m">f=e^{-rT}[q f_u+(1-q)f_d]</span>，<span class="m">q=\frac{e^{rT}-d}{u-d}</span>。</li>
+<li><span class="m">0&lt;q&lt;1</span> 時沒有套利機會；在 <span class="m">q</span> 下，<span class="m">E[S_T]=S_0e^{rT}</span>，股票的期望報酬率即為無風險利率。</li>
+</ol>
+<dl class="sym"><dt><span class="m">S_0,\ u,\ d</span></dt><dd>目前股價、上漲倍數、下跌倍數</dd><dt><span class="m">f,\ f_u,\ f_d</span></dt><dd>選擇權現在、上漲後、下跌後的價值</dd><dt><span class="m">\Delta,\ q,\ r,\ T</span></dt><dd>避險股數、風險中立機率、無風險利率、期間</dd><dt><span class="m">E[\cdot],\ S_T</span></dt><dd>期望值、到期股價</dd><dt><span class="m">e</span></dt><dd>自然常數，<span class="m">e^{-rT}</span> 為折現</dd></dl>
+<p class="more"><a href="#8">← 回第 8 頁</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/binomial-option-pricing.md" target="_blank" rel="noopener">Binomial Option Pricing</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-01-options-binomial-tree.md" target="_blank" rel="noopener">講義 01</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/risk-neutral-valuation.md" target="_blank" rel="noopener">Risk-Neutral Valuation</a></footer>
+</section>
+<section class="slide appendix" id="sB" data-id="B">
+<div class="content">
+<h2>附錄 B：Itô 定理與 Black-Scholes 偏微分方程</h2>
+<p class="lead">持有適當股數可抵銷選擇權的隨機變動，組合無風險，由此得到 Black-Scholes 偏微分方程。</p>
+<p>偏微分 <span class="m">\frac{\partial f}{\partial S}</span> 表示只讓股價變動、其他固定時，選擇權價格的變化率；<span class="m">\frac{\partial^2 f}{\partial S^2}</span> 為變化率本身的變化率。</p>
+<ol>
+<li><b>Itô 定理</b>：若 <span class="m">dS=\mu S\,dt+\sigma S\,dz</span>，則 <span class="m">df=\left(\frac{\partial f}{\partial t}+\mu S\frac{\partial f}{\partial S}+\frac12\sigma^2S^2\frac{\partial^2 f}{\partial S^2}\right)dt+\sigma S\frac{\partial f}{\partial S}dz</span>。比一般微積分多出 <span class="m">\frac12\sigma^2S^2\frac{\partial^2 f}{\partial S^2}</span>，原因在於 <span class="m">(dz)^2=dt</span> 不可忽略。</li>
+<li>賣出 1 單位選擇權、買進 <span class="m">\frac{\partial f}{\partial S}</span> 股，兩者的 <span class="m">dz</span> 項互相抵銷，組合變動為 <span class="m">-\left(\frac{\partial f}{\partial t}+\frac12\sigma^2S^2\frac{\partial^2 f}{\partial S^2}\right)dt</span>，沒有隨機項。</li>
+<li>無風險組合只能賺 <span class="m">r</span>，整理得 <span class="m">rf=\frac{\partial f}{\partial t}+rS\frac{\partial f}{\partial S}+\frac12\sigma^2S^2\frac{\partial^2 f}{\partial S^2}</span>。過程中 <span class="m">\mu</span> 消去。</li>
+</ol>
+<dl class="sym"><dt><span class="m">f,\ S,\ t</span></dt><dd>選擇權價格、股價、時間</dd><dt><span class="m">\mu,\ \sigma,\ r</span></dt><dd>期望報酬率、波動度、無風險利率</dd><dt><span class="m">dS,\ dt,\ dz,\ df</span></dt><dd>極短時間內的股價變動、時間、隨機變動、選擇權價格變動</dd></dl>
+<p class="more"><a href="#12">← 回第 12 頁</a>　<a href="#C">附錄 C →</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/calculus-basics.md" target="_blank" rel="noopener">Calculus Basics</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/itos-lemma.md" target="_blank" rel="noopener">Itô's Lemma</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/black-scholes-pde.md" target="_blank" rel="noopener">Black-Scholes PDE</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-02-stock-dynamics-ito.md" target="_blank" rel="noopener">講義 02</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-03-black-scholes-formula.md" target="_blank" rel="noopener">講義 03</a></footer>
+</section>
+<section class="slide appendix" id="sC" data-id="C">
+<div class="content">
+<h2>附錄 C：以熱傳導方程式求解</h2>
+<p class="lead">經過變數轉換，Black-Scholes 偏微分方程與熱傳導方程式相同，可以直接套用熱擴散的解。</p>
+<ol>
+<li>令 <span class="m">\tau=T-t</span>、<span class="m">x=\ln\frac SK+(r-\frac12\sigma^2)\tau</span>、<span class="m">C=e^{-r\tau}V(x,\tau)</span>，方程式化為 <span class="m">V_\tau=\frac12\sigma^2V_{xx}</span>，到期條件為 <span class="m">V(x,0)=K(e^x-1)^+</span>。</li>
+<li>熱傳導方程式 <span class="m">U_t=c^2U_{xx}</span> 的解為 <span class="m">U(x,t)=\int\frac{1}{\sqrt{4\pi c^2t}}e^{-\frac{(x-y)^2}{4c^2t}}g(y)\,dy</span>，即以常態分配的鐘形曲線對起始溫度 <span class="m">g</span> 加權平均。</li>
+<li>以 <span class="m">c^2=\frac12\sigma^2</span>、<span class="m">g(y)=K(e^y-1)^+</span> 代入並積分，乘回 <span class="m">e^{-r\tau}</span> 即得 <span class="m">C=SN(d_1)-Ke^{-r\tau}N(d_2)</span>。</li>
+</ol>
+<p>數值驗證：轉換後的函數滿足 <span class="m">V_\tau=\frac12\sigma^2V_{xx}</span>（6.18426 對 6.18425）；熱擴散解算出的值與公式一致（13.49246 對 13.49248）。</p>
+<dl class="sym"><dt><span class="m">\tau,\ x,\ V</span></dt><dd>距到期時間、轉換後的股價變數、轉換後的價格</dd><dt><span class="m">V_\tau,\ V_{xx}</span></dt><dd><span class="m">V</span> 對 <span class="m">\tau</span> 的偏微分、對 <span class="m">x</span> 的二階偏微分</dd><dt><span class="m">U,\ c,\ g,\ y</span></dt><dd>溫度、擴散係數、起始溫度、積分變數</dd><dt><span class="m">(\cdot)^+</span></dt><dd>取正值，負數記為 0</dd><dt><span class="m">U_t,\ U_{xx}</span></dt><dd><span class="m">U</span> 對時間的偏微分、對 <span class="m">x</span> 的二階偏微分</dd><dt><span class="m">t,\ dy</span></dt><dd>時間、積分的微小區間</dd><dt><span class="m">C,\ S,\ K,\ r,\ T,\ \sigma,\ e,\ N,\ d_1,\ d_2</span></dt><dd>同第 12 頁</dd></dl>
+<p class="more"><a href="#B">← 附錄 B</a>　<a href="#D">附錄 D →</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/heat-equation-method.md" target="_blank" rel="noopener">Heat Equation Method</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-06-bs-pde-derivation.md" target="_blank" rel="noopener">講義 06</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/black-scholes-pde.md" target="_blank" rel="noopener">Black-Scholes PDE</a></footer>
+</section>
+<section class="slide appendix" id="sD" data-id="D">
+<div class="content">
+<h2>附錄 D：Martingale 與測度轉換</h2>
+<p class="lead">無套利的市場中，資產價格折現後在風險中立機率下為 Martingale，選擇權價格即為期望值再折現。</p>
+<ol>
+<li>定價公式：<span class="m">\frac{H(t)}{\beta(t)}=E^Q\!\left[\frac{H(T)}{\beta(T)}\right]</span>，<span class="m">\beta(t)=e^{rt}</span> 為貨幣帳戶的價值。</li>
+<li>測度轉換（Girsanov 定理）：<span class="m">dw^P=dw^Q-\frac{\mu-r}{\sigma}dt</span>，股價由 <span class="m">\frac{dS}{S}=\mu\,dt+\sigma dw^P</span> 變為 <span class="m">\frac{dS}{S}=r\,dt+\sigma dw^Q</span>。風險溢酬 <span class="m">\mu-r</span> 已反映在測度轉換中。</li>
+<li>再令 <span class="m">dw^Q=dw^R+\sigma dt</span>，換成以股票為衡量單位的測度 <span class="m">R</span>。</li>
+<li>買權價格 <span class="m">C=S\cdot\Pr^R(S_T&gt;K)-Ke^{-rT}\Pr^Q(S_T&gt;K)=SN(d_1)-Ke^{-rT}N(d_2)</span>。</li>
+</ol>
+<dl class="sym"><dt><span class="m">H(t),\ \beta(t)</span></dt><dd>商品在時間 <span class="m">t</span> 的價格、貨幣帳戶價值</dd><dt><span class="m">P,\ Q,\ R</span></dt><dd>真實機率、風險中立機率、以股票衡量的機率</dd><dt><span class="m">E^Q,\ \Pr^Q</span></dt><dd>在 <span class="m">Q</span> 下的期望值與機率</dd><dt><span class="m">dw^P,\ dw^Q,\ dw^R</span></dt><dd>三種機率下的布朗運動變動</dd><dt><span class="m">C,\ S,\ K,\ r,\ T,\ \sigma,\ \mu,\ e,\ N,\ d_1,\ d_2,\ S_T</span></dt><dd>同第 12 頁</dd><dt><span class="m">dS,\ dt</span></dt><dd>極短時間內的股價變動與時間（第 11 頁）</dd></dl>
+<p class="more"><a href="#13">← 回第 13 頁</a></p>
+</div>
+<footer class="src">Wiki：<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/martingale.md" target="_blank" rel="noopener">Martingale</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/concepts/measure-change-girsanov.md" target="_blank" rel="noopener">Measure Change & Girsanov Theorem</a>、<a href="https://github.com/shannon2561/FE-Wiki-Slide/blob/main/finance-wiki/sources/fe-07-martingale-pricing.md" target="_blank" rel="noopener">講義 07</a></footer>
+</section>
+</main>
+<nav class="bar"><button id="prev" aria-label="上一頁">← 上一頁</button><span id="counter"></span><button id="next" aria-label="下一頁">下一頁 →</button></nav>
+<script src="assets/katex/katex.min.js"></script>
+<script>
+document.querySelectorAll('.m,.md').forEach(function(el){
+  try{katex.render(el.textContent,el,{displayMode:el.classList.contains('md'),throwOnError:false});}catch(e){}
+});
+var slides=[].slice.call(document.querySelectorAll('.slide'));
+var main=slides.filter(function(s){return !s.classList.contains('appendix')}).length;
+var cur=0;
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('active',k===cur)});
+  var s=slides[cur],id=s.dataset.id;
+  document.getElementById('counter').textContent=s.classList.contains('appendix')?('附錄 '+id):(id+' / '+main);
+  document.getElementById('prev').disabled=cur===0;document.getElementById('next').disabled=cur===slides.length-1;
+  document.getElementById('progress').style.width=((cur+1)/slides.length*100)+'%';
+  if(location.hash!=='#'+id)history.replaceState(null,'','#'+id);
+}
+function go(hash){var id=(hash||'').replace('#','');var k=slides.findIndex(function(s){return s.dataset.id===id});show(k<0?0:k)}
+document.getElementById('prev').onclick=function(){show(cur-1)};
+document.getElementById('next').onclick=function(){show(cur+1)};
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();show(cur+1)}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(cur-1)}});
+document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a){e.preventDefault();go(a.getAttribute('href'))}});
+window.addEventListener('hashchange',function(){go(location.hash)});
+go(location.hash);
+</script>
+</body>
+</html>

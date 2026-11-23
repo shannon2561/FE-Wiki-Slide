@@ -2,6 +2,10 @@
 
 以財務工程課程講義建立 LLM Wiki，並以 Wiki 為知識來源，製作選擇權定價的入門教學簡報。簡報讀者設定為未修習財金、微積分與機率的初學者，說明選擇權如何定價，以及 Black-Scholes 公式的意義。
 
+## 簡報
+
+[選擇權怎麼定價？從二元樹到 Black-Scholes 公式](https://shannon2561.github.io/FE-Wiki-Slide/option-slides/)：主線 15 頁，附錄 A–D 為推導，每頁底部附對應的 Wiki 頁面連結。
+
 ## 資料夾
 
 - [`finance-wiki/`](finance-wiki/)：Wiki 本體。[`CLAUDE.md`](finance-wiki/CLAUDE.md) 為維護規則，[`index.md`](finance-wiki/index.md) 為總索引，[`log.md`](finance-wiki/log.md) 記錄每次 ingest 新增與修改的頁面。

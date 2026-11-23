@@ -28,7 +28,7 @@
 - 公式兩項的意義（由證明過程得出）：$Ke^{-r(T-t)}N(d_2)$ 為 $Q$ 測度下到期被執行的機率 $N(d_2)$ 乘以履約價的現值；$SN(d_1)$ 則為到期執行時取得之股票的現值。
 - 避險參數：Delta $=N(d_1)$、Gamma $=\frac{n(d_1)}{S\sigma\sqrt{T-t}}$、Vega $=S\sqrt{T-t}\,n(d_1)$、Rho $=K(T-t)e^{-r(T-t)}N(d_2)$、Theta $=-\frac{S\sigma n(d_1)}{2\sqrt{T-t}}-rKe^{-r(T-t)}N(d_2)$。見 [[option-greeks]]。
 - 講義第 3 頁列出 BS 公式的四種推導方式：二項式模型 ($\Delta t\to0$)、Feynman-Kac 定理、推導 PDE、Martingale，分別對應 [[fe-01-options-binomial-tree]]、此講義、[[fe-06-bs-pde-derivation]] 與 [[fe-07-martingale-pricing]]。
-- ingest 時的驗證：以 $S=K=100$、$r=5\%$、$\sigma=20\%$、$T=1$ 計算，買權 10.4506、賣權 5.5735，買賣權平價誤差為 0；五個 Greeks 公式皆與數值微分一致。
+- ingest 時的驗證：以 $S=K=100$、$r=5\%$、$\sigma=20\%$、$T=1$ 計算，$d_1=0.35$、$d_2=0.15$，買權 10.4506、賣權 5.5735，買賣權平價誤差為 0；五個 Greeks 公式皆與數值微分一致。
 - 講義疑似筆誤：第 4 頁總表的 Theta 寫為 $-\frac{S\sigma}{2\sqrt{T-t}}n(d_1)+Kre^{-r(T-t)}N(d_2)$，第二項為正；第 28 頁的證明結果則為 $-\{\frac{S\sigma n(d_1)}{2\sqrt\tau}+Kre^{-r\tau}N(d_2)\}$，數值微分支持第 28 頁，故 Wiki 採用第 28 頁的版本。
 
 ## 關聯概念

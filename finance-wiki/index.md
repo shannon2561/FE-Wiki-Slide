@@ -49,7 +49,9 @@
 
 | 頁面 | 一句話說明 |
 |------|-----------|
-| [[probability-expected-value]] | 機率、期望值、變異數與標準差，波動度即為報酬率的標準差 |
+| [[probability-expected-value]] | 機率、期望值、變異數、標準差與測度，波動度即為報酬率的標準差 |
+| [[return-rate]] | 報酬率、對數報酬率、年化與期望報酬率 |
+| [[logarithm-exponential]] | 指數 e^x 與自然對數 ln，兩者互為反運算 |
 | [[normal-distribution]] | 常態分配、累積機率 N(·) 與機率密度 n(·) |
 | [[discounting-continuous-compounding]] | 折現與連續複利，e^{-rT} 將未來金額換算為現值 |
 | [[calculus-basics]] | 微分、偏微分、積分與偏微分方程的白話說明 |

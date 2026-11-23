@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>選擇權怎麼定價？從二元樹到 Black-Scholes 公式</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<style>
+:root{--ink:#1F2A27;--muted:#66706C;--brand:#2F5D50;--accent:#C8742B;--paper:#FBFAF7;--line:#E3E0D8;--tint:#EEF3F0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#E9E6DF;color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif}
+.deck{height:100%;display:flex;align-items:center;justify-content:center;padding:16px 16px 72px}
+.slide{display:none;width:min(1100px,100%);height:min(680px,calc(100vh - 100px));background:var(--paper);border-radius:14px;box-shadow:0 6px 30px rgba(0,0,0,.08);padding:40px 56px 18px;flex-direction:column}
+.slide.active{display:flex}
+.content{flex:1;overflow:auto;font-size:17.5px;line-height:1.66}
+.content h2{font-family:"Noto Serif TC",serif;font-size:30px;color:var(--brand);margin:0 0 10px}
+.lead{font-size:20px;font-weight:500;background:var(--tint);border-left:4px solid var(--brand);padding:10px 16px;border-radius:0 8px 8px 0;margin:0 0 14px}
+.content ul,.content ol{margin:6px 0 10px;padding-left:1.4em}.content li{margin:4px 0}
+.content b{color:var(--brand)}
+.md{margin:4px 0;text-align:center;font-size:20px;overflow-x:auto}
+dl.sym{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:2px 14px;font-size:14.5px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:10px 0}
+dl.sym dt{text-align:right;color:var(--brand)}dl.sym dd{margin:0;color:var(--muted)}
+table{border-collapse:collapse;margin:8px 0;font-size:17px}th,td{border:1px solid var(--line);padding:6px 14px;text-align:center}th{background:var(--tint)}
+.fig{margin:4px auto;max-width:420px}.fig svg{width:100%;height:auto;font-family:"Noto Sans TC",sans-serif}
+.split{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:center}.split .fig{max-width:100%}
+.more{font-size:15px}.more a,.content a{color:var(--accent)}
+footer.src{border-top:1px solid var(--line);padding-top:8px;font-size:13px;color:var(--muted)}
+footer.src a{color:var(--muted)}
+.cover .content{display:flex;flex-direction:column;justify-content:center}
+.cover-title{font-family:"Noto Serif TC",serif;font-size:56px;color:var(--brand);margin:0}
+.cover-sub{font-size:26px;color:var(--accent);margin:6px 0 30px}
+.hint{color:var(--muted);font-size:15px}
+.appendix{background:#FFFDF8}.appendix h2{color:#6B4A1E}
+nav.bar{position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;justify-content:center;gap:14px;background:rgba(251,250,247,.95);border-top:1px solid var(--line);font-size:15px}
+nav.bar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font:inherit}
+nav.bar button:disabled{opacity:.4;cursor:default}
+.progress{position:fixed;top:0;left:0;height:4px;background:var(--brand);transition:width .2s}
+@media (max-width:700px){dl.sym{grid-template-columns:auto 1fr}.split{grid-template-columns:1fr}.slide{padding:22px 20px 12px;height:calc(100vh - 90px)}.content{font-size:16px}.content h2{font-size:23px}.cover-title{font-size:36px}.lead{font-size:17px}}
+@media print{nav.bar,.progress{display:none}.deck{display:block;padding:0}.slide{display:flex!important;page-break-after:always;box-shadow:none;height:auto}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="deck" id="deck">
+<!--SLIDES-->
+</main>
+<nav class="bar"><button id="prev" aria-label="上一頁">← 上一頁</button><span id="counter"></span><button id="next" aria-label="下一頁">下一頁 →</button></nav>
+<script src="assets/katex/katex.min.js"></script>
+<script>
+document.querySelectorAll('.m,.md').forEach(function(el){
+  try{katex.render(el.textContent,el,{displayMode:el.classList.contains('md'),throwOnError:false});}catch(e){}
+});
+var slides=[].slice.call(document.querySelectorAll('.slide'));
+var main=slides.filter(function(s){return !s.classList.contains('appendix')}).length;
+var cur=0;
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('active',k===cur)});
+  var s=slides[cur],id=s.dataset.id;
+  document.getElementById('counter').textContent=s.classList.contains('appendix')?('附錄 '+id):(id+' / '+main);
+  document.getElementById('prev').disabled=cur===0;document.getElementById('next').disabled=cur===slides.length-1;
+  document.getElementById('progress').style.width=((cur+1)/slides.length*100)+'%';
+  if(location.hash!=='#'+id)history.replaceState(null,'','#'+id);
+}
+function go(hash){var id=(hash||'').replace('#','');var k=slides.findIndex(function(s){return s.dataset.id===id});show(k<0?0:k)}
+document.getElementById('prev').onclick=function(){show(cur-1)};
+document.getElementById('next').onclick=function(){show(cur+1)};
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault();show(cur+1)}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();show(cur-1)}});
+document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a){e.preventDefault();go(a.getAttribute('href'))}});
+window.addEventListener('hashchange',function(){go(location.hash)});
+go(location.hash);
+</script>
+</body>
+</html>

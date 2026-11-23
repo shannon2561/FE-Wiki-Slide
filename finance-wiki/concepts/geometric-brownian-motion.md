@@ -11,4 +11,4 @@ Black-Scholes 模型對股價的假設：$dS=\mu S\,dt+\sigma S\,dz$。股價每
 
 ## 關聯概念
 
-[[brownian-motion]]、[[itos-lemma]]、[[black-scholes-model]]
+[[brownian-motion]]、[[itos-lemma]]、[[black-scholes-model]]、[[return-rate]]、[[logarithm-exponential]]

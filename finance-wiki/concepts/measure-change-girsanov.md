@@ -11,4 +11,4 @@
 
 ## 關聯概念
 
-[[risk-neutral-valuation]]、[[martingale]]、[[brownian-motion]]、[[black-scholes-model]]
+[[risk-neutral-valuation]]、[[martingale]]、[[brownian-motion]]、[[black-scholes-model]]、[[probability-expected-value]]（測度的白話說明）
