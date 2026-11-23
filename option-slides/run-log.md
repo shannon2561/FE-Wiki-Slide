@@ -40,3 +40,23 @@
 - 檢查：lint 結果為死連結 0、孤立頁 0、缺區塊 0、未進索引 0；禁用詞掃描僅剩誤判（「自我融資」「個人版」、表格空格、CLAUDE.md 中列出的禁用詞）
 - 順帶發現：prompt-injection、quant-factor-mining-methodology 兩頁的「在知識庫中的出現」在範圍整理後變成空白，lint 規則沒有檢查空區塊，改寫時才發現並補上說明；derivatives 頁仍寫著 $p$，與 binomial-option-pricing 的 $q$ 不一致，一併修正
 - 流程調整：CLAUDE.md 新增「頁面寫作規則」，之後 ingest 時即依規則撰寫，不必事後整批改寫
+
+## 節點 2｜排大綱（查詢 Wiki）
+
+### 2-1 大綱 v1
+- 輸出：`docs/02-outline.md`，主線 15 頁加附錄 A–D，每頁標註對應的 Wiki 頁面與首次出現的術語
+- 檢查 A（出處）：**未通過**。第 5 頁需要的「期望值」「折現」「無套利」三個詞，Wiki 中多頁使用（binomial-option-pricing、risk-neutral-valuation、black-scholes-model 等），卻沒有任何一頁以白話定義。讀者沒有機率基礎，若在簡報中直接補，該頁將無法對應至 Wiki
+- 檢查 B（術語順序）：補上第 5 頁的前提下通過
+- 檢查 C（五份講義皆有對應）：通過
+- 處理：退回節點 1 補概念頁
+
+### 2-2 人工審核：退回 Wiki 補基礎知識頁
+- 使用者決定：讀者沒有基礎，無套利以外，微積分與機率分配等基礎也一併補進 Wiki，讓簡報每頁皆有頁面可對應
+- 新增 5 個概念頁：no-arbitrage（無套利）、probability-expected-value（機率、期望值、變異數與標準差）、normal-distribution（常態分配與累積機率 N(·)）、discounting-continuous-compounding（折現與連續複利）、calculus-basics（微分、偏微分、積分）
+- 每頁的例子皆取自已 ingest 的講義並以 Python 重算，例如買權定價偏高為 0.70 時可套利 0.069 元、偏低為 0.60 時可套利 0.034 元、$N(1)=0.8413$；定義屬基礎知識整理者，於頁尾「來源說明」註明
+
+### 2-3 大綱 v2 重新檢查
+- 第 5、11、12 頁改對應新增的基礎知識頁，附錄 B 加入 calculus-basics
+- 檢查 A（出處）、B（術語順序）、C（五份講義皆有對應）、D（頁數）皆通過
+- Wiki lint 發現新頁 calculus-basics 為孤立頁，於 option-greeks、itos-lemma、black-scholes-pde 補上連結後通過
+- **流程調整**：lint 存為 `tools/lint_wiki.py`，並新增「空區塊」檢查。範圍整理後兩頁的「在知識庫中的出現」曾變成空白，原本的 lint 只檢查標題是否存在，未能發現

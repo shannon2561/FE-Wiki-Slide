@@ -21,4 +21,4 @@
 
 ## 關聯概念
 
-[[derivatives]]（BS 模型為衍生性商品定價中最常用的封閉解方法）
+[[derivatives]]（BS 模型為衍生性商品定價中最常用的封閉解方法）、[[no-arbitrage]]、[[normal-distribution]]、[[discounting-continuous-compounding]]

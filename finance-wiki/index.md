@@ -45,6 +45,16 @@
 
 ## Concepts（概念）
 
+### 基礎知識
+
+| 頁面 | 一句話說明 |
+|------|-----------|
+| [[probability-expected-value]] | 機率、期望值、變異數與標準差，波動度即為報酬率的標準差 |
+| [[normal-distribution]] | 常態分配、累積機率 N(·) 與機率密度 n(·) |
+| [[discounting-continuous-compounding]] | 折現與連續複利，e^{-rT} 將未來金額換算為現值 |
+| [[calculus-basics]] | 微分、偏微分、積分與偏微分方程的白話說明 |
+| [[no-arbitrage]] | 無套利：不存在零成本、無風險又穩賺的機會，為選擇權定價的出發點 |
+
 ### 選擇權定價
 
 | 頁面 | 一句話說明 |

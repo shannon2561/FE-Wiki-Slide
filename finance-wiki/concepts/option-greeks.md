@@ -20,4 +20,4 @@
 
 ## 關聯概念
 
-[[black-scholes-model]]、[[delta-hedging-replication]]
+[[black-scholes-model]]、[[delta-hedging-replication]]、[[calculus-basics]]（Greeks 皆為偏微分）、[[normal-distribution]]

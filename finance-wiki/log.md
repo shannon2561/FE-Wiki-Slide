@@ -47,3 +47,12 @@
 **做法**：逐頁重寫文字，公式、數字、檔名、路徑與 wikilink 保持不變；移除第一人稱、破折號與誇大用語，社團名稱改為泛稱，刪除指向私人設定檔的說明。  
 **規則修改**：CLAUDE.md 新增「頁面寫作規則」。  
 **連帶修正**：prompt-injection、quant-factor-mining-methodology 兩頁的來源已於範圍整理時移除，「在知識庫中的出現」補上說明，不再留空。
+
+---
+
+## 2026-11-23：新增基礎知識概念頁
+
+**原因**：排簡報大綱時發現，「期望值」「折現」「無套利」等詞在多頁使用，卻沒有任何一頁以白話定義；簡報讀者沒有財金、微積分與機率基礎，故補上基礎知識頁。  
+**新增**：concepts/[[no-arbitrage]]、[[probability-expected-value]]、[[normal-distribution]]、[[discounting-continuous-compounding]]、[[calculus-basics]]  
+**例子**：皆取自已 ingest 的講義並以 Python 重算，例如一期例題中買權定價為 0.70 時可套利 0.069 元、為 0.60 時可套利 0.034 元；$4.5e^{-0.03}=4.367$；$N(1)=0.8413$。  
+**規則修改**：CLAUDE.md 新增「基礎知識頁」一節，要求頁尾註明來源說明。

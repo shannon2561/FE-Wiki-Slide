@@ -13,4 +13,4 @@ $$df=\left(\frac{\partial f}{\partial t}+a\frac{\partial f}{\partial X}+\frac12 
 
 ## 關聯概念
 
-[[brownian-motion]]、[[geometric-brownian-motion]]、[[black-scholes-model]]
+[[brownian-motion]]、[[geometric-brownian-motion]]、[[black-scholes-model]]、[[calculus-basics]]

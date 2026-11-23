@@ -13,4 +13,4 @@ $$rf=\frac{\partial f}{\partial t}+rS\frac{\partial f}{\partial S}+\frac12\sigma
 
 ## 關聯概念
 
-[[black-scholes-model]]、[[itos-lemma]]、[[delta-hedging-replication]]、[[risk-neutral-valuation]]
+[[black-scholes-model]]、[[itos-lemma]]、[[delta-hedging-replication]]、[[risk-neutral-valuation]]、[[calculus-basics]]

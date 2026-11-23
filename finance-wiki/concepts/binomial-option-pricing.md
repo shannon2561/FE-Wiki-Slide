@@ -13,7 +13,7 @@ $$f=e^{-rT}[q f_u+(1-q)f_d],\qquad q=\frac{e^{rT}-d}{u-d}$$
 
 ## 關聯概念
 
-[[risk-neutral-valuation]]、[[delta-hedging-replication]]、[[option-basics]]、[[black-scholes-model]]
+[[risk-neutral-valuation]]、[[delta-hedging-replication]]、[[option-basics]]、[[black-scholes-model]]、[[no-arbitrage]]、[[discounting-continuous-compounding]]
 
 ## 關聯文獻
 
