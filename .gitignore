@@ -1,0 +1,17 @@
+# 白名單：只上傳這次作業需要的東西，其他一律不上傳
+/*
+!/.gitignore
+!/README.md
+!/finance-wiki/
+!/option-slides/
+
+# 有著作權的原始資料（講義、教科書、論文全文）不上傳
+finance-wiki/raw/
+
+# Obsidian 個人設定、暫存檔
+.obsidian/
+option-slides/_tmp/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
