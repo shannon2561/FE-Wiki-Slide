@@ -17,9 +17,7 @@
 | 06 使用 BS 之 PDE 推導 BS 定價公式 | 22 | [`fe-06-bs-pde-derivation`](finance-wiki/sources/fe-06-bs-pde-derivation.md) |
 | 07 Martingale 定價理論 | 25 | [`fe-07-martingale-pricing`](finance-wiki/sources/fe-07-martingale-pricing.md) |
 
-講義中的公式與數值例皆以 Python 重新計算，共發現 3 處筆誤。例如講義 03 第 4 頁 Theta 公式第二項的正負號有誤，與同份講義第 28 頁的證明結果不符。各筆誤皆記錄於對應的來源頁。
-
-原始講義 PDF 涉及著作權，故未放入 repo。
+raw data涉及著作權故不會上傳。
 
 ## 相關專案
 
